@@ -1,0 +1,75 @@
+---
+title: "R data.table"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+Description: Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins, fast add/modify/delete of columns by group using no copies at all, list columns, a fast friendly file reader and parallel file writer. Offers a natural and flexible syntax, for faster development.
+
+```{r}
+#create a huge dataset
+set.seed(1234)
+x1<-1:10000000
+x2<-rnorm(10000000)
+x3<-rt(10000000,2)
+x4<-rf(10000000,2,3)
+x5<-rpois(10000000,5)
+x6<-sample(letters,10000000,replace = TRUE)
+x7<-rchisq(10000000,3)
+my.df<-data.frame(x1=x1,x2=x2,x3=x3,
+                  x4=x4,x5=x5,x6=x6,
+                  x7=x7)
+write.csv(my.df,'test.csv',row.names = FALSE)
+```
+
+```{r}
+#compare function read.table() and read.csv() of rbase and function fread() of package data.table.
+filepath<-file.choose()
+system.time(read.table(file=filepath,head=TRUE,sep = ','))
+system.time(read.csv(file=filepath,head=TRUE,sep = ','))
+library(data.table)
+system.time(fread(input = filepath))
+```
+
+从中可以看出，fread()函数在读取大文本文件时，速度上有显著的提升，要比read.table()快了近7倍，比read.csv()也快了近4倍。
+
+```{r}
+#duplicated returns a logical vector indicating which rows of a data.table are duplicates of a row with smaller subscripts.
+#unique returns a data.table with duplicated rows removed, by columns specified in by argument. When no by then duplicated rows by all columns are removed.
+#example：remove duplicated data between col x5 and col x6 of dataset my.df
+df<-my.df
+dt<-data.table(my.df)
+library(sqldf)
+system.time(sqldf('select distinct x5,x6 from df'))
+library(data.table)
+system.time(unique(dt[,list(x5,x6)], by = c('x5','x6')))
+```
+同样的排重目的，read.table包中的unique函数比SQL快了100多倍！
+
+```{r}
+#function subset Returns subsets of a data.table.
+system.time(subset(x = df, x2 >= 1 & x3 <= 0.5 & x6 == 'c' | x7 > 1.2))
+system.time(subset(x = dt, x2 >= 1 & x3 <= 0.5 & x6 == 'c' | x7 > 1.2))
+```
+对1000W行的数据集，差异虽然不是很明显，但如果有更大的数据集的话，这种差异一定会显得非常明显。
+
+```{r}
+#setorder (and setorderv) reorders the rows of a data.table based on the columns (and column order) provided. It reorders the table by reference and is therefore very memory efficient.
+library(plyr)
+system.time(arrange(df, x2, desc(x3), x6))
+library(data.table)
+system.time(setorder(dt, x2, x3,x6))
+```
+通过使用plyr包中的arrange()函数和data.table包中的setorder()函数对比，发现后者比前者的速度快了130倍！
+
+```{r}
+#Grouping calculation
+library(sqldf)
+system.time(sqldf('select x6, avg(x1) A, min(x2) B,max(x3) C ,max(x5)-min(x5) D from df group by x6'))
+library(data.table)
+system.time(dt[, list(A = mean(x1), B = min(x2), C = max(x3), D = diff(range(x5))), by = x6])
+```
+为达到同样的聚合效果，data.table包所显示的速度是另一种方法的74倍！
+
+通过以上几个案例的对比分析，我们可以看见read.table包中的函数应用比较简单（代码较少）而且运行速度也是非常快速的。除此之外，该包中还包括重命名变量名函数setnames()、数据整形函数melt()和dcast()、数据合并函数merge()和rbind()、rbindlist()等。详细信息可以查看相应的帮助文件。
