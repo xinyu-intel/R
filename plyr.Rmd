@@ -1,0 +1,113 @@
+---
+title: "plyr in R"
+output:
+  html_document: default
+  html_notebook: default
+  word_document: default
+---
+
+#简介
+本文将着重介绍一下同一个作者开发的plyr包，该包与dplyr包既有相似的地方，也有不同的地方。plyr包最让我兴奋的地方是可以方便的实现数据结构之间的转换，具体见下文的详细说明。
+
+#函数介绍及例子
+##a*ply函数格式
+aaply(.data = ,.margins = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+adply(.data = ,.margins = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+alply(.data = ,.margins = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+a_ply(.data = ,.margins = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+.data可以是数组也可以是矩阵；
+.margins指定要分析的数组或矩阵的维度，即行维(.margins = 1)还是列维(.margins = 2)；
+.fun为行维或列维指定需要处理的函数，可以是R自带的函数，如sum()，mean()等，也可以是自定义函数；
+...为指定函数的其他参数；
+.progress指定以什么样的方式展示程序运行的进度，默认不显示进度，还可以选择"text"(文本进度条), "tk"(tk进度条), 和"win"(Windows系统自带的进度条)；
+.inform是否指定报错信息，默认不指定，因为设为TRUE的话，将降低程序的执行效率，但该参数对Bug处理是有帮助的。
+
+##例子：
+```{r}
+library(plyr)
+a<-array(data=1:500000,dim=c(100000,5))
+test1<-aaply(.data = a,.margins = 1,.fun = mean, .progress = 'none') #对每一行求均值，不显示进度条
+head(test1)
+test2<-adply(.data = a,.margins = 1,.fun = sd, .progress = 'text') #对每一行求标准差，以文本形式显示进度条
+head(test2)
+a2<-array(rnorm(10000000), dim = c(1000,10000))
+test3<-alply(.data = a2,.margins = 2,.fun = sum, .progress = 'tk') #对每一列求和，以tk形式显示进度条
+a3<-array(rnorm(10000000), dim = c(100,100000))
+test4<-a_ply(.data = a3,.margins = 2,.fun = max, .progress = 'win') #对每一列求最大值，以Windows自带进度条显示进度
+```
+
+##d*ply函数格式
+daply(.data = ,.variables = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+ddply(.data = ,.variables = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+dlply(.data = ,.variables = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+d_ply(.data = ,.variables = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+.data指定为数据框数据；
+.variables指定数据框中的分组变量；
+.fun基于分组变量，可对数据框中的其余变量指定某种函数，可以是R自带的函数，如sum()，mean()等，也可以是自定义函数，类似于聚合分析；
+.progress和.inform与a*ply函数参数一致。
+
+##例子：
+```{r}
+fun<-function(data) apply(data,2,mean) #构建自定义函数
+daply(.data = iris[,1:4],.variables = .(iris$Species),.fun=fun)
+ddply(.data = iris[,1:4],.variables = .(iris$Species),.fun=fun)
+dlply(.data = iris[,1:4],.variables = .(iris$Species),.fun=fun)
+d_ply(.data = iris[,1:4],.variables = .(iris$Species),.fun=fun)
+```
+
+##l*ply函数格式
+laply(.data = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+ldply(.data = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+llply(.data = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+l_ply(.data = ,.fun = ,...,.progress = 'none',.inform = FALSE)
+.data可以指定为列表数据，也可以指定为向量数据；
+其余参数与a*ply()函数和d*lpy()函数参数一致。
+
+##例子：
+```{r}
+x1<-1:100
+x2<-seq(from = 100,to = 1000 ,by = 2)
+x3<-runif(150,min = 10,max = 100)
+##列表由向量构成
+l1<-list(x1 = x1,x2 = x2,x3 = x3)
+laply(.data = l1,.fun = mean)
+ldply(.data = l1,.fun = summary)
+llply(.data = l1,.fun = quantile)
+l_ply(.data = l1,.fun = summary)
+```
+
+##构建数据框d11
+```{r}
+y11<-rnorm(n = 100,mean = 10,sd = 5)
+y12<-rt(n = 100,df = 3)
+y13<-rf(n = 100,df1 = 2,df2 = 3)
+y14<-factor(x = c('low','potential','high'),ordered = T)
+y15<-sample(y14,size = 100,replace = TRUE)
+d11<-data.frame(y1 = y11,y2 = y12,y3 = y13,y5 = y15)
+head(d11)
+```
+
+
+##构建数据框d21
+```{r}
+y21<-1:100
+y22<-seq(from = 1,to = 2,length = 100)
+y23<-rchisq(n = 100,df = 8)
+y24<-factor(x = c('A','B','C','D'),ordered = T)
+y25<-sample(y24,size = 100,replace = TRUE)
+d21<-data.frame(y21 = y21,y22 = y22,y23 = y23,y25 = y25)
+head(d21)
+```
+
+
+##列表由数据框组成
+```{r}
+l2<-list(first = d11,second = d21)
+library(psych)
+fun<-function(data) describeBy(data[,1:3],group = data[,4])
+llply(.data = l2,.fun = fun,.progress = 'none')
+llply(.data = l2,.fun = fun,.progress = 'text')
+```
+
+#总结
+plyr包中还有很多其他函数，如rename()、arrange()、join()等函数，其功能与dplyr包中的rename()、arrange()、left_join()一致，这里不再赘述。这两个包可以相辅相成，互补缺陷，各显优势，所以在数据预处理过程中可以考虑结合使用这两个包，一定能使工作效率得到大幅提升。
