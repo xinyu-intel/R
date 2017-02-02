@@ -2,13 +2,13 @@
 title: "利用R语言处理缺失值的方法"
 author: "Matrix_Chen"
 output:
+  html_document: default
   pdf_document:
     includes:
       in_header: header.tex
-    keep_tex: yes   
+    keep_tex: yes
     latex_engine: xelatex
   word_document: default
-  html_document: default
 ---
 
 **概述：**很多统计模型都是基于没有缺失值的数据集，然而在实际应用中，总会出现某些原因导致数据的缺失，本文将从三个角度来解决缺失值的问题。
