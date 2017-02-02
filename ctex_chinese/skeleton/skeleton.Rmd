@@ -1,0 +1,12 @@
+---
+title: "reshape in R"
+author: "Matrix_Chen"
+output:
+  pdf_document:
+    includes:
+      in_header: header.tex
+    keep_tex: yes   
+    latex_engine: xelatex
+  word_document: default
+  html_document: default
+---

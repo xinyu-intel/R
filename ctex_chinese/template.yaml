@@ -1,0 +1,4 @@
+name: ctex chinese (Markdown)
+description: >
+  Template for documents to be knitred as PDF with chinese.
+create_dir: false

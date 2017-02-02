@@ -1,0 +1,1 @@
+the whole library should be copied to ~/R/library/rmarkdown/rmarkdown/templates
