@@ -11,7 +11,7 @@ Intro to the method of knitring PDF files including Chinese:
 1.you should install the latest ctex software on your machine, and be sure to choose the full installization package.
 
 2.insert the following code in the document header information:
-'''
+```
 ---
 title: "标题"
 author: "你的名字"
@@ -24,6 +24,6 @@ output:
   word_document: default
   html_document: default
 ---
-'''
+```
 	
 3.the file 'header.tex' should be copied to your working library.
