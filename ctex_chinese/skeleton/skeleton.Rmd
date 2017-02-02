@@ -1,6 +1,6 @@
 ---
-title: "reshape in R"
-author: "Matrix_Chen"
+title: "标题"
+author: "你的名字"
 output:
   pdf_document:
     includes:
