@@ -1,14 +1,9 @@
 ---
-title: "reshape in R"
-author: "Matrix_Chen"
+title: "R reshape"
 output:
-  pdf_document:
-    includes:
-      in_header: header.tex
-    keep_tex: yes   
-    latex_engine: xelatex
-  word_document: default
   html_document: default
+  html_notebook: default
+  pdf_document: default
 ---
 
 概述：reshape包中的函数提供了解决汇总问题的统一办法，该包的核心思想是创造一个“熔化”的数据集版本(通过melt函数)，然后将其投入(cast函数)到一个所希望的目标对象中。
