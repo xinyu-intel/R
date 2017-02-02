@@ -1,0 +1,185 @@
+---
+title: "tidyr in R"
+author: "Matrix_Chen"
+output:
+  html_document: default
+  pdf_document:
+    includes:
+      in_header: header.tex
+    keep_tex: yes
+    latex_engine: xelatex
+  word_document: default
+---
+
+**tidyr包中主要涉及：**
+
+1. 缺失值的简单补齐
+2. 长形表变宽形表与宽形表变长形表
+3. 列分割与列合并
+
+##一、缺失值的简单补齐
+
+```{r}
+library(tidyr)
+library(dplyr)
+#创建含有缺失值的数据框示例
+x<-c(1,2,7,8,NA,10,22,NA,15)
+y<-c('a',NA,'b',NA,'b','a','a','b','a')
+df<-data.frame(x = x, y = y)
+df
+```
+
+下面用x的均值或中位数替换缺失值，用y的众数替换缺失值。
+
+```{r}
+#计算x的均值和中位数
+x_mean<-mean(df$x, na.rm = TRUE)
+x_median<-median(df$x, na.rm = TRUE)
+#计算y的众数
+y_mode<-as.character(df$y[which.max(table(df$y))])
+#替换数据框df中x和y的缺失值
+df2<-replace_na(data = df, replace = list(x = x_mean, y = y_mode))
+df2
+df3<-replace_na(data = df, replace = list(x = x_median, y = y_mode))
+df3
+```
+
+##二、长形表变宽形表与宽形表变长形表
+
+这里简单介绍一下何为长形表和宽形表，简单的说，长形表就是一个观测对象可由多行组成，而宽形表则是一个观测仅由一行组成。例如：
+
+```{r}
+#长形表
+name<-c('A','A','A','B','B')
+product<-c('P1','P2','P3','P1','P4')
+price<-c(100,130,55,100,78)
+df_long<-data.frame(name = name, product = product, price = price)
+df_long
+
+#宽形表
+name<-c('A','B','C')
+gender<-c('f','f','m')
+province<-c('JS','SH','HN')
+age<-c(18,22,19)
+df_wide<-data.frame(name = name, gender = gender, province = province, age = age)
+df_wide
+```
+
+有时，为了满足建模或绘图的要求，往往需要将长形表转换为宽形表，或将宽形表变为长形表。下面所要讲的是，如何实现这两种数据表类型的转换。
+
+###使用spread()函数实现长表转宽表，语法如下：
+
+```{r}
+# spread(data, key, value, fill = NA, convert = FALSE, drop = TRUE)
+# data：为需要转换的长形表
+# key：需要将变量值拓展为字段的变量
+# value：需要分散的值
+# fill：对于缺失值，可将fill的值赋值给被转型后的缺失值
+```
+
+**举例说明：**
+
+```{r}
+df_long_expand<-spread(data = df_long, key = product, value = price)
+df_long_expand
+#被转型后的数据框中存在缺失值，如果想给缺失值传递一个指定值的话，就需要fill参数的作用。
+df_long_expand2<-spread(data = df_long, key = product, value = price, fill = 0)
+df_long_expand2
+```
+
+###使用gather()函数实现宽表转长表，语法如下：
+
+```{r}
+# gather(data, key, value, ..., na.rm = FALSE, convert = FALSE)
+# data：需要被转换的宽形表
+# key：将原数据框中的所有列赋给一个新变量key
+# value：将原数据框中的所有值赋给一个新变量value
+# ...：可以指定哪些列聚到一列中
+# na.rm：是否删除缺失值
+```
+
+**举例说明：**
+
+```{r}
+#默认将所有列存放到key中
+df_wide_gather<-gather(data = df_wide, key = variable, value = value)
+df_wide_gather
+#指定需要被聚为一列的字段
+df_wide_gather2<-gather(data = df_wide, key = variable, value = value, gender, province)
+df_wide_gather2
+#df_wide_gather2的结果也可以写成
+df_wide_gather3<-gather(data = df_wide, key = variable, value = value, -name)
+df_wide_gather3
+```
+
+##三、列分割与列合并
+
+###separate()函数可将一列拆分为多列，一般可用于日志数据或日期时间型数据的拆分，语法如下：###
+
+```{r}
+# separate(data, col, into, sep = "[^[:alnum:]]+", remove = TRUE,convert = FALSE, extra = "warn", fill = "warn", ...)
+# data：为数据框
+# col：需要被拆分的列
+# into：新建的列名，为字符串向量
+# sep：被拆分列的分隔符
+# remove：是否删除被分割的列
+```
+
+**举例说明：**
+
+###生成时间数据
+
+```{r}
+id<-c(1,2)
+datetime<-c(as.POSIXlt('2015-12-31 13:23:44'), as.POSIXlt('2016-01-28 21:14:12'))
+df<-data.frame(id = id, datetime = datetime)
+df
+```
+
+###下面使用separate()函数将日期时间值分割为年、月、日、时、分、秒
+
+```{r}
+#将日期时间数据切割为日期和时间两列
+separate1<-df %>% separate(., col = datetime, into = c('date', 'time'), sep = ' ', remove = FALSE)
+separate1
+
+#将日期切割为年月日
+separate2<-separate1 %>% separate(., col = date, into = c('year', 'month', 'day'), sep = '-', remove = FALSE)
+separate2
+
+#将时间切割为时分秒
+separate3<-separate2 %>% separate(., col = time, into = c('hour', 'minute', 'second'), sep = ':', remove = FALSE)
+separate3
+```
+
+###unite()函数与separate()函数相反，可将多列合并为一列，语法如下：
+
+```{r}
+# unite(data, col, ..., sep = "_", remove = TRUE)
+# data：为数据框
+# col：被组合的新列名称
+# ...：指定哪些列需要被组合
+# sep：组合列之间的连接符，默认为下划线
+# remove：是否删除被组合的列
+```
+
+**举例说明：**
+
+```{r}
+#删除原来的日期时间列、日期列和时间列
+separate3<-separate3[,-c(2,3,7)]
+separate3
+
+#将年月日合并为新字段日期
+unite1<-unite(data = separate3, 'date', sep = '-', year, month, day)
+unite1
+
+#将时分秒合并为新字段时间
+unite2<-unite1 %>% unite(., col = 'time', sep = ':', hour, minute, second)
+unite2
+
+#将日期和时间合并为新字段
+unite3<-unite2 %>% unite(., col = 'datetime', sep = ' ', date, time)
+unite3
+```
+
