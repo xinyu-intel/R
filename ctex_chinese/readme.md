@@ -3,7 +3,7 @@ Intro to the method of knitring PDF files including Chinese:
 ##method1
 1.you should install the latest ctex software on your machine, and be sure to choose the full installization package.
 
-2.the whole library 'ctex_chinese' should be copied to ~/R/library/rmarkdown/rmarkdown/templates so that you can start writing a chinese rmarkdown based on a template
+2.the whole library 'ctex_chinese' should be copied to ~/R/library/rmarkdown/rmarkdown/templates so that you can start writing a chinese rmarkdown based on a template.
 
 3.the file 'header.tex' should be copied to your working library.
 
