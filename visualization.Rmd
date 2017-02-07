@@ -1234,3 +1234,386 @@ ggplot(data = iris, mapping = aes(x = Petal.Length, y = Petal.Width)) +
   stat_density2d(aes(alpha = ..density..), 
                  geom = 'tile', contour = FALSE, h = c(0.1,0.2))
 ```
+
+#使用ggplot2绘制分面图形
+
+在之前的一系列ggplot2绘图中都没有涉及到关于分面的操作，分面是数据可视化最实用的技术之一，**通过facet_grid()和facet_wrap()函数将分组数据横向或纵向或横纵向排列**，这样更有助于图形之间的比较。
+
+##一、绘制分面图
+
+```{r}
+library(ggplot2)
+# 创建模拟数据集
+set.seed(1234)
+M <- c('一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月')
+Month <- rep(M, each = 5)
+Region <- rep(c('East','South','West','North','Center'), times = 12)
+Amount <- round(runif(n = 60, min = 500, max = 5000))
+df <- data.frame(Month = Month, Region = Region, Amount = Amount)
+```
+
+首先用facet_grid()函数绘制横向或纵向分面图
+
+```{r}
+# 绘制横向的分面图
+ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+  geom_bar(stat = 'identity') + 
+  facet_grid(. ~ Month) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+这样一幅横向分面的条形图就绘制成功了，下面在看看纵向分面图该如何绘制？
+
+```{r}
+#绘制纵向的分面图
+ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+  geom_bar(stat = 'identity') + 
+  facet_grid(Month ~ .) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+图形很难看，我们从新构建一组数据以绘制纵向的分面图：
+
+```{r}
+set.seed(1234)
+Year <- rep(seq(from = 2001, to = 2015),times = 4)
+Type <- rep(c('A','B','C','D'), each = 15)
+Value <- round(runif(60, min = 10, max = 100))
+df2 <- data.frame(Year = Year, Type = Type, Value = Value)
+
+#绘制纵向的分面图
+ggplot(data = df2, mapping = aes(x = factor(Year), y = Value, group = 1)) + 
+  geom_line(colour = 'blue') + 
+  xlab('Year') + 
+  facet_grid(Type ~ .)
+```
+
+我们按照facet_grid()函数的语法，使用facet_wrap()函数绘制分面图：
+
+```{r}
+# #绘制横向的分面图
+# ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+#   geom_bar(stat = 'identity') + 
+#   facet_wrap(.~ Month) + 
+#   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+报错了！显示错误内容为：分面中至少包含一个分层变量。经查帮助，facet_wrap()函数的语法不能写成.~ Month格式！于是改成下方的格式：
+
+```{r}
+ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+  geom_bar(stat = 'identity') + 
+  facet_wrap(~ Month) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+运行成功！接下来我们看看纵向的分面图：
+
+```{r}
+# #绘制纵向的分面图
+# ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+#   geom_bar(stat = 'identity') + 
+#   facet_wrap(Month ~) + 
+#   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+又一次报错！报错内容为：语法中存在错误的')'。查看帮助后发现：使用facet_wrap()函数不能使用Month ~语法，只能是类似于~a + b或('a','b')的形式。
+
+经过了摸打滚爬，我们应该发现**facet_grid()函数和facet_wrap()函数的区别**了吧，下面总结一下：
+
+1. facet_grid()函数会严格按照用户指定的方向分面，即横向分面必须是.~x的格式，纵向分面必须是y.~的格式，当然也可以y~x表示纵横两个维度的方向进行分面绘图；**facet_wrap()函数不存在横向或纵向或横纵向的分面，其实他就像按照从左到右，从上到下的顺序摆放每一个分面图**。
+2. 语法上有显著的区别，**facet_grid()函数必须是y~.或.~x或y~x的格式，而facet_wrap()函数只能是~x的格式，与之等价的是加引号的分面变量名称，即'x'**。
+3. 上面的图形中，没有展现出来，其实**facet_wrap()函数可以自由排版分面行方向的个数和列方向的个数，通过nrow=和ncol=参数实现**，而facet_grid()函数只能是一根筋的下来，即要么全在行方向上，要么全在列方向上，要么就在组合方向上。下面举个facet_wrap()函数指定列数的分面图例子：
+
+```{r}
+ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+  geom_bar(stat = 'identity') + 
+  facet_wrap(~Month, ncol = 3) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+上图可知，我们控制了列数为3的分面图，当然根据实际情况，也可以随意的设置其他列数或行数。
+
+善于发现问题的朋友，一定迫不可待的问一个问题，分面图按月份绘制的话，为什么月份不是正常的“一月”到“十二月”的顺序，而是按照拼音的字母顺序排列。如果我想按照自定义的顺序展现我的分面图该如何操作呢？很简单，只需要从新**定义字符变量的因子顺序**即可：
+
+```{r}
+df$Month <- factor(df$Month, 
+                   levels = c('一月','二月','三月','四月','五月','六月',
+                              '七月','八月','九月','十月','十一月','十二月'))
+#通过facet_wrap()函数绘制分面图
+ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+  geom_bar(stat = 'identity') + 
+  facet_wrap(~Month, ncol = 3) + 
+  theme(axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank())
+```
+
+这下顺序正常了，而且也可以从季度的顺序发现图形展现之间的规律或特征。同样，**我们也可以使用facet_grid()函数绘制分面图**：
+
+```{r}
+ggplot(data = df, mapping = aes(x = Region, y = Amount, fill = Region)) + 
+  geom_bar(stat = 'identity') + 
+  facet_grid(. ~ Month) + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+```
+
+同样也是按照指定的顺序进行排列。
+
+##二、分面图的微调
+
+关于分面图的微调，这里就说明三项常用的微调手段，即：
+
+###非固定的坐标轴
+
+```{r}
+set.seed(1234)
+height <- c(runif(100, min = 60, max = 195), 
+            runif(80, min = 45, max = 175))
+weight <- 1.2*height + rnorm(180, mean = 10, sd = 20)
+sex = rep(c('M','F'), times = c(100, 80))
+df3 <- data.frame(sex = sex, height = height, weight = weight)
+ggplot(data = df3, mapping = aes(x = height, y = weight)) + 
+  geom_point(colour = 'blue', size = 3) + 
+  facet_grid(.~sex)
+```
+
+**默认情况下，分面图的纵坐标和横坐标的范围是一致的**，如果我想让分面图横坐标轴的范围随实际数据大小进行调整，该如何实现？
+
+```{r}
+ggplot(data = df3, mapping = aes(x = height, y = weight)) + 
+  geom_point(colour = 'blue', size = 3) + 
+  facet_grid(.~sex, scales = 'free_x')
+```
+
+图形结果很明显，**女性（F）与男性（M）的横坐标范围各不相同，男性的范围要比女性大一些**。**这里需要强调的是**，横向分面只能控制各自的x轴是否自由设定，纵向分面只能控制各自的y轴是否自由设定，纵横交错的分面可以同时设定两轴是否自由。
+
+###修改分面的文本标签
+
+分面图形的默认情况下只显示分组变量的水平，即F和M，一个陌生人可能并不知道F和M各代表什么含义，如果能够把相应的分组变量名称也加入进来就更能提高可读性，下面通过修改一点点的脚本就能实现这样的功能：
+
+```{r}
+ggplot(data = df3, mapping = aes(x = height, y = weight)) + 
+  geom_point(colour = 'blue', size = 3) + 
+  facet_grid(.~sex, labeller = label_both)
+```
+
+简单吧，**只需将设置labeller = label_both就可以实现功能**，如果你还觉得这样做不够清晰，我还想把F和M改为Female和Male，该怎么办呢？同样很简单，只需要更改原数据中水平的标签即可。
+
+```{r}
+levels(df3$sex)[levels(df3$sex)=='F'] <- 'Female'
+levels(df3$sex)[levels(df3$sex)=='M'] <- 'Male'
+ggplot(data = df3, mapping = aes(x = height, y = weight)) + 
+  geom_point(colour = 'blue', size = 3) + 
+  facet_grid(.~sex, labeller = label_both)
+```
+
+###修改分面标签外观
+
+通常修改图形的外观都是通过主题theme()函数实现，毫不例外，这里也使用主题函数对分面标签外观进行修改。
+
+```{r}
+ggplot(data = df3, mapping = aes(x = height, y = weight)) + 
+  geom_point(colour = 'blue', size = 3) + 
+  facet_grid(.~sex, labeller = label_both) + 
+  theme(strip.text = element_text(colour = 'red', face = 'bold', 
+                                  size = rel(1.5)), 
+        strip.background = element_rect(fill = 'white', colour = 'brown', 
+                                        size = rel(2), linetype = 2))
+```
+
+其中，**参数strip.text设置**分面标签的颜色、大小、字体等；**参数strip.background设置**分面标签背景的填充色、线框色、线型等；**rel()设置**字体大小或线宽为原主题的倍数。
+
+#绘制双轴坐标图形
+
+下面介绍**plotrix包中的twoord.plot()函数和twoord.stackplot()函数**，它们可以实现双坐标轴图形的绘制。
+
+```{r}
+# twoord.plot()函数语法及参数含义：
+# twoord.plot(lx,ly,rx,ry,data=NULL,main="",
+#         xlim=NULL,lylim=NULL,rylim=NULL,
+#         mar=c(5,4,4,4),lcol=1,rcol=2,
+#         xlab="",lytickpos=NA,ylab="",
+#         ylab.at=NA,rytickpos=NA,rylab="",
+#         rylab.at=NA,lpch=1,rpch=2,
+#         type="b",xtickpos=NULL,
+#         xticklab=NULL,halfwidth=0.4,
+#         axislab.cex=1,do.first=NULL,...)
+# lx,ly,rx,ry：分别指定左坐标轴和右坐标轴的值，必须是连续的值
+# data：需要绘制双轴图形的数据框
+# main：为图形指定标题
+# xlim：限制横坐标值的范围
+# lylim,rylim：限制左右纵坐标值的范围
+# mar：设置图形边界距，默认值为(5,4,4,4)
+# lcol,rcol：设置左右坐标轴的颜色，这样可以起到图例的作用
+# xlab：设置横坐标轴标签
+# lytickpos：设置左坐标轴刻度标签的位置
+# ylab：设置左坐标轴标签
+# ylab.at：设置左坐标轴标签位置
+# rytickpos：设置右坐标轴刻度标签的位置
+# rylab：设置又坐标轴标签
+# rylab.at：设置右坐标轴标签位置
+# lpch,rpch：设置左右坐标轴图形的外观
+# type：指定图形类型
+# xtickpos：设置横坐标轴刻度标签位置
+# xticklab：设置横坐标轴刻度标签
+# halfwidth：设置用户给定条形图宽度的一半
+# axislab.cex：设置坐标轴标签和刻度标签的大小
+# do.first：通过该参数可以往图形中添加背景色或网格线
+```
+
+下面通过案例来说明**twoord.plot()函数**的应用：
+
+```{r}
+library(plotrix)
+```
+
+```{r}
+##绘制双轴的两个线图
+
+Date <- seq(from = as.Date('2015-01-01'), to = as.Date('2015-12-01'), 
+            by = 'month')
+Consumers <- c(100,80,120,153,200,188,220,322,300,321,282,304)
+Amount <- c(1000,840,1458,1844,2045,2000,2548,5081,5000,5200,4800,4971)
+df1 <- data.frame(Date = Date, Consumers=Consumers, Amount = Amount)
+twoord.plot(lx = df1$Date, ly = df1$Consumers, rx = df1$Date, ry = df1$Amount, 
+            main = '双轴的两条线图', xlab = '月份', ylab = '会员人数', 
+            rylab = '总消费额', type = c('line','line'))
+```
+
+
+虽然双坐标轴图形已经绘制好，但图中有几个不满意的地方：
+
+1. 横坐标轴的刻度标签不是正确的日期格式
+
+2. 右坐标轴刻度标签很挤
+
+3. 图形不炫酷，想添加背景色或网格线
+
+这些不满意的地方都不是问题，twoord.plot()函数可以轻松搞定：
+
+1. 通过xticklab参数重新设置横坐标轴的刻度标签
+
+2. 通过rytickpos参数重新设置刻度标签
+
+3. 通过do.first参数给图形添加背景色和网格线
+
+```{r}
+twoord.plot(lx = df1$Date, ly = df1$Consumers, 
+            rx = df1$Date, ry = df1$Amount, main = '双轴的两条线图', 
+            xlab = '月份', ylab = '会员人数', rylab = '总消费额', 
+            type = c('line','line'), xtickpos=as.numeric(df1$Date), 
+            xticklab = as.character(df1$Date), 
+            rytickpos = seq(500,5000,by = 1500), 
+            do.first = 'plot_bg(col = \'gray\'); grid(col = \'white\', lty = 2)')
+```
+
+这样的图形结果要比上面的图看起来舒服多了。如果想把左坐标轴的会员人数用条形图表示，右坐标轴的总消费额用线条表示，该如何操作呢？很简单，只需**将type参数设置为('bar','line')**就可以了：
+
+```{r}
+twoord.plot(lx = df1$Date, ly = df1$Consumers, 
+            rx = df1$Date, ry = df1$Amount, lcol = 'steelblue', 
+            main = '双轴的两条线图', xlab = '月份', ylab = '会员人数', 
+            rylab = '总消费额', type = c('bar','line'), 
+            xtickpos=as.numeric(df1$Date), xticklab = as.character(df1$Date), 
+            rytickpos = seq(500,5000,by = 1500), 
+            do.first = 'plot_bg(col = \'gray\'); grid(col = \'white\', lty = 2)')
+```
+
+哎？又有问题了，这个条形图怎么这么细窄？超级难看。不要着急，只要稍稍调整halfwidth参数的大小即可，这里设置为8：
+
+```{r}
+twoord.plot(lx = df1$Date, ly = df1$Consumers, 
+            rx = df1$Date, ry = df1$Amount, lcol = 'steelblue', 
+            main = '双轴的两条线图', xlab = '月份', ylab = '会员人数', 
+            rylab = '总消费额', type = c('bar','line'), 
+            xtickpos=as.numeric(df1$Date), xticklab = as.character(df1$Date), 
+            rytickpos = seq(500,5000,by = 1500), halfwidth = 8, 
+            do.first = 'plot_bg(col = \'gray\'); grid(col = \'white\', lty = 2)')
+```
+
+这会儿图形正常了。还记得直方图是如何绘制的吗？hist()函数，直方图+核密度图是如何绘制的？hist()函数+lines()函数：
+
+```{r}
+set.seed(1000)
+x = rnorm(1000,10,3)
+h <- hist(x, breaks = 50)
+```
+
+##绘制直方图和核密度图
+
+```{r}
+hist(x, breaks = 50, col = 'steelblue')
+lines(density(x), col = 'red')
+```
+
+哎？核密度线怎么成了一条直线了？原来是因为直方图高度对于的频次与核密度值不是一个量纲，即频次在0~60之间，而核密度值在0~1之间。如果要使核密度曲线体现出来，必须**将hist()函数中freq参数设置为FALSE**：
+
+```{r}
+hist(x, breaks = 50, col = 'steelblue', freq = FALSE)
+lines(density(x), col = 'red', lwd=2)
+```
+
+如果我既想看到不同组的频次，又想看到对应的密度值该怎么办呢？这个时候就需要绘制**双轴图**了：
+
+```{r}
+x1 <- h$mids
+y1 <- h$counts
+x2 <- seq(min(x), max(x), by = 0.01)
+y2 <- dnorm(seq(min(x), max(x), by = 0.01),10,3)
+twoord.plot(lx = x1, ly = y1, rx = x2, ry = y2, 
+            type=c('bar','l'), lcol = 'steelblue', rcol = 'red', 
+            ylab = 'Counts', rylab = 'Density', 
+            main = 'Histogram and density curve', halfwidth=0.2, 
+            lylim = c(0,max(y1)+1), rylim = c(0,0.2),lwd=2)
+```
+
+关于twoord.plot()函数，最后再介绍一种图，帕累托图形。即图形中包一个纵坐标轴表示绝对数量，另一个纵坐标轴表示累计百分比。实现该图脚本如下：
+
+```{r}
+type <- 1:7
+absolute <- c(12,15,20,28,11,5,7)
+cum_per <- cumsum(absolute)/sum(absolute)
+twoord.plot(lx = type, ly = absolute, rx = type, ry = cum_per, 
+            type=c('bar','l'), lcol = 'steelblue', rcol = 'red', 
+            ylab = '总数', rylab = '累计百分比%', main = '帕累托图', 
+            xtickpos=type, xticklab = c('A','B','C','D','E','F','G'))
+```
+
+
+下面再看一下twoord.stackplot()函数，该函数与twoord.plot()的不同之处在于，其可以**绘制堆叠图**，函数具体语法和参数含义如下：
+
+```{r}
+# twoord.stackplot(lx, rx, ldata, rdata,
+#           lcol, rcol, ltype, rtype,
+#           border, rylab, lylab, xlab,
+#           ..., incrylim=NULL,halfwidth=0.4,
+#           leftfront=FALSE, 
+#           mar = c(5, 4, 4, 4))
+# lx,rx：指定左右横坐标轴的值
+# ldata,rdata：指定左右纵坐标轴的值
+# lcol, rcol：指定左右坐标轴的颜色
+# ltype, rtype：指定左右坐标轴线的类型
+# border：指定条形图边框颜色
+# rylab,lylab：指定左右纵坐标轴标签
+# xlab：指定横坐标轴标签
+# incrylim：增加坐标轴值的范围
+# halfwidth：设置用户给定条形图宽度的一半
+# leftfront：如果leftfront设置为TRUE的话，则左坐标轴将置于顶层
+# mar：设置图形边界距，默认值为(5,4,4,4)
+```
+
+现在有一个场景是这样的，需要绘制某APP在2015年各月中新老会员人数及新会员所占比重：
+
+```{r}
+set.seed(1111)
+Date <- 1:12
+Old <- round(runif(12, 100,300))
+New <- round(runif(12, 50,120))
+Ratio <- New/(New+Old)
+twoord.stackplot(lx=Date, rx=Date, 
+                 ldata=cbind(Old, New), rdata=Ratio,
+                 lcol=c('steelblue','orange'), rcol='red', 
+                 ltype='bar',rtype='l', border='grey80', 
+                 lylab = '人数', rylab = '新客比例', xlab='月份',
+                 main='新老客占比', incrylim=0.1)
+```
