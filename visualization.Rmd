@@ -1617,3 +1617,277 @@ twoord.stackplot(lx=Date, rx=Date,
                  lylab = '人数', rylab = '新客比例', xlab='月份',
                  main='新老客占比', incrylim=0.1)
 ```
+
+#绘制相关系数图
+
+虽然**cor()函数**可以非常方便快捷的计算出连续变量之间的相关系数，但当变量非常多时，返回的相关系数一定时读者看的眼花缭乱。
+下面就以R自带的mtcars数据集为例，讲讲相关系数图的绘制：
+
+```{r}
+cor(mtcars[1:7])
+```
+
+**很显然，这么多数字堆在一起肯定很难快速的发现变量之间的相关性大小**，如果可以将相关系数可视化，就能弥补一大堆数字的缺陷了。这里介绍**corrplot包中的corrplot()函数**进行相关系数的可视化，首先来看看该函数的语法和一些重要参数：
+
+```{r}
+# corrplot(corr, 
+#          method = c("circle", "square", "ellipse", "number", "shade", "color", "pie"),
+#          type = c("full", "lower", "upper"), add = FALSE,
+#          col = NULL, bg = "white", title = "", is.corr = TRUE, 
+#          diag = TRUE, outline = FALSE, mar = c(0, 0, 0, 0), 
+#          addgrid.col = NULL, addCoef.col = NULL, addCoefasPercent = FALSE, 
+#          order = c("original", "AOE", "FPC", "hclust", "alphabet"), 
+#          hclust.method = c("complete", "ward", "ward.D", "ward.D2", "single", 
+#                            "average", "mcquitty", "median", "centroid"),
+#          addrect = NULL, rect.col = "black", rect.lwd = 2, 
+#          tl.pos = NULL, tl.cex = 1, 
+#          tl.col = "red", tl.offset = 0.4, tl.srt = 90,
+#          cl.pos = NULL, cl.lim = NULL, 
+#          cl.length = NULL, cl.cex = 0.8, cl.ratio = 0.15, 
+#          cl.align.text = "c", cl.offset = 0.5, number.cex = 1,
+#          number.font = 2, number.digits = NULL, 
+#          addshade = c("negative", "positive", "all"), 
+#          shade.lwd = 1, shade.col = "white", p.mat = NULL, sig.level = 0.05, 
+#          insig = c("pch", "p-value", "blank", "n"), 
+#          pch = 4, pch.col = "black", pch.cex = 3, 
+#          plotCI = c("n", "square", "circle", "rect"), 
+#          lowCI.mat = NULL, uppCI.mat = NULL, 
+#          na.label = "?", na.label.col = "black", ...)
+# corr：需要可视化的相关系数矩阵
+# method：指定可视化的方法，可以是圆形、方形、椭圆形、数值、阴影、颜色或饼图形
+# type：指定展示的方式，可以是完全的、下三角或上三角
+# col：指定图形展示的颜色，默认以均匀的颜色展示
+# bg：指定图的背景色
+# title：为图形添加标题
+# is.corr：是否为相关系数绘图，默认为TRUE，同样也可以实现非相关系数的可视化，只需使该参数设为FALSE即可
+# diag：是否展示对角线上的结果，默认为TRUE
+# outline：是否绘制圆形、方形或椭圆形的轮廓，默认为FALSE
+# mar：具体设置图形的四边间距
+# addgrid.col：当选择的方法为颜色或阴影时，默认的网格线颜色为白色，否则为灰色
+# addCoef.col：为相关系数添加颜色，默认不添加相关系数，只有方法为number时，该参数才起作用
+# addCoefasPercent：为节省绘图空间，是否将相关系数转换为百分比格式，默认为FALSE
+# order：指定相关系数排序的方法，可以是原始顺序(original)、特征向量角序(AOE)、第一主成分顺序(FPC)、层次聚类顺序(hclust)和字母顺序，一般”AOE”排序结果都比”FPC”要好
+# hclust.method：当order为hclust时，该参数可以是层次聚类中ward法、最大距离法等7种之一
+# addrect：当order为hclust时，可以为添加相关系数图添加矩形框，默认不添加框，如果想添加框时，只需为该参数指定一个整数即可
+# rect.col：指定矩形框的颜色
+# rect.lwd：指定矩形框的线宽
+# tl.pos：指定文本标签(变量名称)的位置，当type=full时，默认标签位置在左边和顶部(lt)，当type=lower时，默认标签在左边和对角线(ld)，当type=upper时，默认标签在顶部和对角线，d表示对角线，n表示不添加文本标签
+# tl.cex：指定文本标签的大小
+# tl.col：指定文本标签的颜色
+# cl.pos：图例（颜色）位置，当type=upper或full时，图例在右表(r)，当type=lower时，图例在底部，不需要图例时，只需指定该参数为n
+# addshade：只有当method=shade时，该参数才有用，参数值可以是negtive/positive和all，分表表示对负相关系数、正相关系数和所有相关系数添加阴影。注意：正相关系数的阴影是45度，负相关系数的阴影是135度
+# shade.lwd：指定阴影的线宽
+# shade.col：指定阴影线的颜色
+```
+
+虽然该函数的参数比较多，但可以组合各种参数，灵活实现各种各样的相关系数图。下面就举几个例子：
+
+```{r}
+library(corrplot)
+corr <- cor(mtcars[,1:7])
+#参数全部默认情况下的相关系数图
+corrplot(corr = corr)
+```
+
+```{r}
+#指定数值方法的相关系数图
+corrplot(corr = corr, method="number", col="black", cl.pos="n")
+```
+
+```{r}
+#按照特征向量角序(AOE)排序相关系数图
+corrplot(corr = corr, order = 'AOE')
+```
+
+```{r}
+#同时添加相关系数值
+corrplot(corr = corr, order ="AOE", addCoef.col="grey")
+```
+
+```{r}
+#选择方法为color
+corrplot(corr = corr, method = 'color', order ="AOE", addCoef.col="grey")
+```
+
+```{r}
+#绘制圆形轮廓相关系数图
+corrplot(corr = corr, col = c("white","black"), order="AOE", outline=TRUE, cl.pos="n")
+```
+
+这个图看起来非常像围棋
+
+```{r}
+#自定义背景色
+corrplot(corr = corr, col = c("white","black"), bg="gold2",  order="AOE", cl.pos="n")
+```
+
+```{r}
+#混合方法之上三角为圆形，下三角为数字
+corrplot(corr = corr,order="AOE",type="upper",tl.pos="d")
+corrplot(corr = corr,add=TRUE, type="lower", method="number",
+         order="AOE",diag=FALSE,tl.pos="n", cl.pos="n")
+```
+
+这幅图将颜色、圆的大小和数值型相关系数相结合，更容易发现变量之间的相关性/
+
+```{r}
+#混合方法之上三角为圆形，下三角为方形
+corrplot(corr = corr,order="AOE",type="upper",tl.pos="d")
+corrplot(corr = corr,add=TRUE, type="lower", method="square",
+         order="AOE",diag=FALSE,tl.pos="n", cl.pos="n")
+```
+
+```{r}
+#混合方法之上三角为圆形，下三角为黑色数字
+corrplot(corr = corr,order="AOE",type="upper",tl.pos="tp")
+corrplot(corr = corr,add=TRUE, type="lower", method="number",
+         order="AOE", col="black",diag=FALSE,tl.pos="n", cl.pos="n")
+```
+
+```{r}
+#以层次聚类法排序
+corrplot(corr = corr, order="hclust")
+
+#以层次聚类法排序，并绘制3个矩形框
+corrplot(corr = corr, order="hclust", addrect = 3, rect.col = "black")
+```
+
+有关更多相关系数图的绘制可参见corrplot()函数的帮助文档，文档中还包括了很多案例，感兴趣的可以去参考的看看。
+
+#绘制热图及网络图
+
+热力图是一种非常常用的统计图形，该图**将两个变量（一般是离散变量）的交叉汇总信息以颜色的形式展现出来**，而映射给颜色变量的是连续型数值变量，下面就以例子说明热力图的优势：
+
+```{r}
+#模拟数据集 
+set.seed(123) 
+Year <- rep(2006:2015, each = 4) 
+Quater <-rep(c('Q1','Q2','Q3','Q4'), times = 10) 
+Counts <- round(runif(40, min= 10, max = 200)) 
+df <- data.frame(Year = Year, Quater = Quater, Counts= Counts)
+```
+
+热力图可以通过**stats包的heatmap()函数**绘制，也可以通过**ggplot2包中的geom_tile()函数或geom_raster()函数**绘制，这里就以ggplot2包中的函数为例：
+
+```{r}
+library(ggplot2) 
+#使用geom_tile()函数 
+ggplot(data = df, mapping = aes(x =Year, y = Quater, fill = Counts)) + geom_tile() 
+#或者使用geom_raster()函数
+ggplot(data= df, mapping = aes(x = Year, y = Quater, fill = Counts)) + geom_raster()
+```
+
+两者绘制的结果区别不大，一般**geom_raster()效率更高，且更适合打印**。
+
+**这里发现三个问题：**
+
+1. 横坐标年怎么出现小数了？
+
+2. 一般认为颜色越深代表的值越大，这里恰好相反
+
+3. 季度坐标从上到下正好是反的季度顺序，能否颠倒一下？
+
+**解决办法：**
+
+1. 将横坐标年份离散化，改为因子
+
+2. 只需将默认颜色颠倒一下即可：scale_fill_continuous(low = ‘#56B1F7’, high = ‘#132B43’)
+
+3. 对于离散变量可以使用scale_y_discrete(limits=c(‘Q4’,’Q3’,’Q2’,’Q1’))方法实现颠倒，对于连续变量可以直接使用scale_y_reverse()实现刻度的颠倒
+
+具体操作如下：
+
+```{r}
+ggplot(data = df, mapping = aes(x = factor(Year), y = Quater, fill = Counts)) + 
+  geom_tile() + scale_fill_continuous(low = '#56B1F7', high = '#132B43') + 
+  scale_y_discrete(limits=c('Q4','Q3','Q2','Q1')) + 
+  xlab('Year')
+```
+
+这样就能非常快速的查看到哪年那季度的数量较多和较少，总比单纯的数字形式要强：
+
+```{r}
+head(df, 10)
+```
+
+很显然，这是一个长形表，如何将其转换为宽形表呢？这里使用**tidyr包中的spread()函数**加以实现
+
+```{r}
+#长形表变宽形表 
+library(tidyr) 
+spread(data = df, key = Quater, value = Counts)
+```
+
+这就是将一个长形表变为宽形表后呈现的数值交叉表，**如果这样一个数据给老板看，老板肯定会不耐烦**。
+
+还有一种常用的图是**网络图**，网络图一般用于描述关系强弱或路径分析等，通过网络图可以非常直观的发现数据之间的关联。R中**igraph包中的graph()或data.frame.graph()函数**实现网络图的绘制。这里仍然以案例的形式展示网络图的绘制：
+
+```{r}
+#使用gcookbook包中的madmen数据集
+library(gcookbook) 
+head(madmen)
+
+#加载igraph包 
+library(igraph) 
+opar <- par(no.readonly = TRUE) 
+par(mar= c(0,0,0,0))
+
+#选择layout.fruchterman.reingold布局，绘制有方向的网络图 
+g <- graph.data.frame(madmen,directed = TRUE) 
+plot(g, layout = layout.fruchterman.reingold, 
+     vertex.size= 8, edge.arrow.size = 0.5, vertex.label = NA) 
+par(opar)
+```
+
+很简单，一幅网络图就绘制好了，**通过箭头就可以知道节点与节点之间的方向，也可以看出哪些人物是核心人物**。下面用圆形布局绘制网络图：
+
+```{r}
+opar <- par(no.readonly = TRUE) 
+par(mar = c(0,0,0,0)) 
+#选择layout.circle布局，绘制无方向的网络图
+g <- graph.data.frame(madmen, directed = FALSE) 
+plot(g, layout = layout.circle,vertex.size = 8, vertex.label = NA) 
+par(opar)
+```
+
+上面的两幅网络图能够很清晰的看出哪些节点之间是紧密联系的，哪些节点是核心节点，**但这里并没有具体显示这些节点都代表什么含义**，下面看看如何为节点**添加标签**：
+
+```{r}
+#查看标签内容 
+V(g)$name
+
+#绘制带标签的节点 
+opar <- par(no.readonly = TRUE) 
+par(mar = c(0,0,0,0)) 
+g <-graph.data.frame(madmen, directed = FALSE) 
+plot(g, layout = layout.fruchterman.reingold, 
+     vertex.size = 8, vertex.label = V(g)$name, 
+     vertex.label.cex = 0.6, vertex.label.dist= 0.5) 
+par(opar)
+```
+
+除此，我们还可以**在节点与节点之间的连线上做文章**，如设置连线的颜色、为某些特殊的连线加上标签、设置标签大小等。
+
+```{r}
+#绘制带标签的节点 
+opar <- par(no.readonly = TRUE) 
+par(mar = c(0,0,0,0)) 
+g <-graph.data.frame(madmen, directed = FALSE)
+```
+
+这里使用另外一种形式来修改连线之间的属性，即E(g)格式：
+
+```{r}
+#将所有连线设置为黑色 
+E(g)$color = 'black' 
+#将指定连线设置为红色 E(g)[c(2,8,10)]$color = 'red'
+#将指定连线的变迁设置为L1,L2,L3 E(g)[c(2,8,10)]$label = c('L1','L2','L3') 
+#设置标签属性和连续属性
+plot(g, layout = layout.fruchterman.reingold, 
+     vertex.size = 8, vertex.label = V(g)$name, vertex.label.cex = 0.6, 
+     vertex.label.color = 'black', vertex.label.dist = 0.5, 
+     edge.label.cex = 0.8, edge.label.color = 'blue') 
+par(opar)
+```
+
+更多关于网络图的绘制可查看igragh包帮助文档，帮助文档中有非常丰富的函数，可以绘制各种布局的网络图等。
