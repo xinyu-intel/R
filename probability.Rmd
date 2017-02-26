@@ -1,0 +1,164 @@
+---
+title: "R语言解释概率统计中的典例"
+author: "陈新宇"
+output:
+  pdf_document:
+    includes:
+      in_header: header.tex
+    keep_tex: yes   
+    latex_engine: xelatex
+  word_document: default
+  html_document: default
+---
+
+## 一、随机事件与概率
+
+```{r}
+# install.packages("prob") 
+library(prob)  #load the package
+```
+
+### 样本空间
+
+考虑投掷硬币的随机实验，结果是H和T.我们可以使用**tosscoin函数**快速设置样本空间：
+
+```{r}
+tosscoin(1) # 抛一次硬币
+tosscoin(3) # 抛三次硬币
+rolldie(1) # 抛一次多面体（默认为六面体）
+cards() # 抽一张扑克牌
+```
+
+让我们的抽样框中简单地包含三个球，分别标记为1，2和3。我们将从中**有放回**的抽取两次样品：
+
+```{r}
+urnsamples(1:3, size = 2, replace = TRUE, ordered = TRUE)
+```
+
+这个实验相当于抛一个三边模具两次，我们可以用**rolldie函数**完成：
+
+```{r}
+rolldie(2, nsides = 3)
+```
+
+### 随机事件
+
+```{r}
+
+S1 <- tosscoin(2, makespace = TRUE) # 抛两次硬币的情况
+S1[1:3, ] # 前三种情况
+S1[c(2,4),] # 第二和第四种情况
+
+S2 <- cards() # # 抽一张扑克牌的情况
+subset(S2,suit=="Heart") # 抽取S2中的所有红心牌
+subset(S2, rank %in% 7:9) # 抽取S2中的所有7、8、9号牌
+subset(rolldie(3), 
+       X1 + X2 + X3 > 16) # 抛三次六面体数值之和大于16的情况
+
+A = subset(S2, suit == "Heart") # 抽取S2中的所有红心牌
+B = subset(S2, rank %in% 7:9) # 抽取S2中的所有7、8、9号牌
+
+union(A,B) # A和B的并集
+intersect(A,B) # A和B的交集
+setdiff(B,A) # B中排除A
+setdiff(S2,A) # S2中排除A
+```
+
+### 计算概率
+
+**生日问题**
+
+假设在一个房间里有n个人在一起。每个人轮流公布他/她的生日的日期，求至少有两个人生日相同的概率是多少？
+
+**pbirthday**计算广义生日悖论问题中生日重合的概率，这里用**sapply函数**将pbirthday应用到人数向量中。
+
+```{r}
+g <- sapply(1:50, pbirthday)
+plot (1:50 , g,
+      xlab = "Number of people in room ",
+      ylab = "Prob (at least one match )",
+      main = "The Birthday Problem")
+abline (h = 0.5)
+abline (v = 23, lty = 2) # 虚线
+```
+
+或者可以自己写计算概率的函数：
+
+```{r}
+prob.birth<-function(n)
+  {if( n< 365) 
+    return(1-choose(365,n)*factorial(n)/365^n)
+  else
+    return(1)
+  }
+
+g2 <- sapply(1:50, prob.birth)
+plot (1:50 , g2,
+      xlab = "Number of people in room ",
+      ylab = "Prob (at least one match )",
+      main = "The Birthday Problem")
+abline (h = 0.5)
+abline (v = 23, lty = 2) # 虚线
+```
+
+如果你要计算至少有一个人和你生日相同的概率：
+
+```{r}
+q.birth<-function(n){return(1-(364/365)^n)}
+x <- 0:50
+z <- NULL
+for(i in 1:length(x))z[i]<-q.birth(x[i])
+plot(x,z,
+     xlab = "Number of people in room ",
+     ylab = "Prob (at least one match with you)",
+     main = "The Birthday Problem")
+points(x,z)
+```
+
+**Buffon投针试验**
+
+```{r}
+# 绘制空白图形
+plot(c(0,2),c(0,2),type='n',main='布丰投针实验',xlab='X',ylab='Y')
+# 增加平行线
+abline(h=0.5)
+abline(h=1.5,col='red')
+finished <- FALSE
+# trial为实验次数，cross为交叉次数
+trial <- 0
+cross <- 0
+for(i in 1:50){
+    # Dist为针的中心距离红线的垂直距离
+    # Theta为针的角度
+    Dist <- runif(1,min=0,max=1/2)
+    Theta <- runif(1,0,pi)
+    # central.x为针中心点的横坐标
+    # central.y为针中心点的纵坐标
+    central.x <- runif(1,0.5,1.5)
+    central.y <- Dist +1
+    # 计算针两端的坐标
+    y1 <- sin(Theta)/4 + central.y
+    x1 <- cos(Theta)/4 + central.x
+    y2 <- sin(Theta+pi)/4 + central.y
+    x2 <- cos(Theta+pi)/4 + central.x
+    trial <- trial +1
+    # 计数交叉次数
+    cross <- cross + ifelse(0.25*sin(Theta)>=Dist,1,0)
+    # 绘制针的线型和中心点
+    lines(c(x1,x2),c(y1,y2),lty=2)
+    points(central.x,central.y,pch=16,col='grey')
+    cat('trial=',trial,'cross=',cross,'PI=',trial/cross,'\n')
+}
+```
+
+### 条件概率
+
+```{r}
+S3 <- rolldie(2, makespace = TRUE) # assumes ELM
+head(S3)
+A <- subset(S3, X1 == X2)
+B <- subset(S3, X1 + X2 >= 8)
+prob(A,given=B) # B的条件下求A的概率
+prob(S3,X1==X2, given=(X1+X2>=8)) # X1+X2>=8的条件下求A的概率
+```
+
