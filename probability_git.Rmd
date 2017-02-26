@@ -1,15 +1,12 @@
 ---
-title: "R语言与概率论"
-author: "陈新宇"
-output:
-  html_document: default
-  pdf_document:
-    includes:
-      in_header: header.tex
-    keep_tex: yes
-    latex_engine: xelatex
-  word_document: default
+title: "probability demo with r"
+output: github_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 
 ## 一、随机事件与概率
 
@@ -158,8 +155,8 @@ S3 <- rolldie(2, makespace = TRUE) # assumes ELM
 head(S3)
 A <- subset(S3, X1 == X2)
 B <- subset(S3, X1 + X2 >= 8)
-prob(A,given=B) # B的条件下求A的概率
-prob(S3,X1==X2, given=(X1+X2>=8)) # X1+X2>=8的条件下求A的概率
+Prob(A,given=B) # B的条件下求A的概率
+Prob(S3,X1==X2, given=(X1+X2>=8)) # X1+X2>=8的条件下求A的概率
 ```
 
 ## 二、随机变量及其分布
