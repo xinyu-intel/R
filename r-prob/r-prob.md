@@ -1,4 +1,4 @@
-probability demo with r
+概率论基础与R语言
 ================
 
 **前言**
