@@ -11,70 +11,6 @@ probability demo with r
 library(prob)  #load the package
 ```
 
-    ## Warning: package 'prob' was built under R version 3.3.3
-
-    ## Loading required package: combinat
-
-    ## 
-    ## Attaching package: 'combinat'
-
-    ## The following object is masked from 'package:utils':
-    ## 
-    ##     combn
-
-    ## Loading required package: fAsianOptions
-
-    ## Warning: package 'fAsianOptions' was built under R version 3.3.3
-
-    ## Loading required package: timeDate
-
-    ## Loading required package: timeSeries
-
-    ## Warning: package 'timeSeries' was built under R version 3.3.3
-
-    ## Loading required package: fBasics
-
-    ## Warning: package 'fBasics' was built under R version 3.3.3
-
-    ## 
-
-    ## Rmetrics Package fBasics
-
-    ## Analysing Markets and calculating Basic Statistics
-
-    ## Copyright (C) 2005-2014 Rmetrics Association Zurich
-
-    ## Educational Software for Financial Engineering and Computational Science
-
-    ## Rmetrics is free software and comes with ABSOLUTELY NO WARRANTY.
-
-    ## https://www.rmetrics.org --- Mail to: info@rmetrics.org
-
-    ## Loading required package: fOptions
-
-    ## Warning: package 'fOptions' was built under R version 3.3.3
-
-    ## 
-
-    ## Rmetrics Package fOptions
-
-    ## Pricing and Evaluating Basic Options
-
-    ## Copyright (C) 2005-2014 Rmetrics Association Zurich
-
-    ## Educational Software for Financial Engineering and Computational Science
-
-    ## Rmetrics is free software and comes with ABSOLUTELY NO WARRANTY.
-
-    ## https://www.rmetrics.org --- Mail to: info@rmetrics.org
-
-    ## 
-    ## Attaching package: 'prob'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, union
-
 ### 样本空间
 
 考虑投掷硬币的随机实验，结果是H和T.我们可以使用**tosscoin函数**快速设置样本空间：
@@ -1608,6 +1544,7 @@ lln<-function (FUN, pars=NULL, np = 30, n = ani.options("nmax"),pch = 20,col.pol
  
  #LLN for Exponential
  lln(FUN=rexp,pars=2)
+```
 
 ![](01.png)
 
@@ -1666,5 +1603,5 @@ par(mar = c(3, 3, 1, 0.5), mgp = c(1.5, 0.5, 0), tcl = -0.3)
  #chi-square distribution
    f<-function(n) rchisq(n,df=2);
    clt(FUN = f,mu=2,sd=2)
-![](02.png)
 ```
+![](02.png)
