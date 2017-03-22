@@ -1,0 +1,128 @@
+---
+title: "function apply in R"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+本文介绍R语言中的apply函数簇，apply函数簇是使用R做科学计算的基本函数簇之一，下面的例子参考了刘顺祥每天进步一点点R语言教程，编译成notebook形式，便于学习！
+
+如果计算涉及到一个单一的向量，而结果也是一个向量，tapply函数是一个可选项，不同于
+aggregate函数，它返回一个向量或数组，这使得其单个元素很容易被访问。
+
+将组定义为矩阵的行或列，即操作目标为矩阵的每一列或行时，apply函数时最佳选择。该
+函数通常会返回一个向量或数组，但根据行或列操作的结果维度不同，将返回一个列表。
+
+将组定义为列表中的元素。如果组已经形成列表元素，那么sapply或lapply函数比较适合，
+它们的区别是lapply返回一个列表，而sapply可将输出简化为向量或数组。有时可以结合使
+用split函数，将需要处理的数据创建为一个列表，然后再使用这两个函数。
+
+如果所要计算函数的参数为一个矩阵或数组，可以考虑使用mapply函数，该函数非常的灵
+活和简单，其返回的结果一般是列表形式。
+
+```{r}
+#如果想分析iris数据集中Sepal.Length在各个花种中的最大值，可以通过tapply函数实现，这里的Sepal.Length和Species为两个向量，且各自的长度均相等。
+max_sepal.length<-tapply(iris$Sepal.Length,iris$Species,max)
+max_sepal.length
+```
+
+```{r}
+#rpois make a set of poisson distribution;rt make a set of student distribution.
+x<-rpois(100,2)
+y<-rpois(100,3)
+z<-rt(100,2,3)
+data<-data.frame(x=x,y=y,z=z)
+head(data)
+tapply(data$z,INDEX = list(data$x,data$y),FUN = sum)
+```
+
+```{r}
+#当数据具备数组的特性，可通过apply函数对数据的每个维度进行运算，该函数需要三个参数：需要计算的数组、运算维度的索引号和使用的函数。
+mat<-matrix(1:12, ncol = 3)
+mat
+apply(mat,MARGIN = 2,FUN = scale)
+scale(mat)
+```
+
+```{r}
+#统计各个列的均值，为比较显式循环和apply的隐式循环，程序如下，就可以比较出两种方式的效率：
+mat<-matrix(1:100000,ncol = 100)
+system.time(apply(mat,2,mean))
+
+mean_self<-function(data){
+  row_n<-dim(data)[1]
+  col_n<-dim(data)[2]
+  c_m<-numeric(col_n)
+  for(i in 1:col_n){
+    sum<-0
+    for(j in 1:row_n){
+      sum<-sum+data[j,i]
+    }
+    c_m[i]<sum/row_n
+  }
+  return(c_m)
+}
+system.time(mean_self(mat))
+```
+
+```{r}
+#lapply()函数和sapply()函数把一个列表或向量作为其第一个参数，再把需要应用到每个列表元素的函数作为它的第二个参数。其实它也应用到了循环，是一种隐式的循环，对列表的每一个元素做同样的函数计算。
+x<-c('Today is Sunday','The Weather is very nice','Please check your R language synax','R语言 是统计学中 非常实用的 工具')
+#strsplit函数是根据某个分隔符将字符串分割为多个单词
+split_x<-strsplit(x,' ')
+mem_length1<-lapply(split_x,length)
+mem_length2<-sapply(split_x,length)
+unlist(mem_length1)
+unlist(mem_length2)
+```
+
+```{r}
+#使用sapply函数的另一个重要问题涉及到数据框。当数据框被视为列表时，数据框的每一列看着独立的列表元素。
+sapply(iris,class)
+sapply(ChickWeight,mode)
+```
+
+```{r}
+#通过以上的应用，可以提取满足特定条件的数据框的列
+r1<-iris[,sapply(iris,class)=='numeric']
+r2<-CO2[,sapply(CO2,class)=='factor']
+head(r1)
+head(r2)
+```
+
+```{r}
+#接下来使用自编函数加入到sapply函数中，实现循环。该自编函数的目的是计算出1000个100*5的矩阵中最大相关系数的均值。这里很关键的一点是给自编函数传一个虚拟参数i用来循环。
+fun2<-function(i,n,m){
+  mat=matrix(rnorm(n*m),ncol=m)
+  corr=cor(mat)
+  diag(corr)=NA
+  max(corr,na.rm = TRUE)
+}
+max_r<-sapply(1:1000,FUN = fun2,n=100,m=5)
+mean_r<-mean(max_r)
+mean_r
+```
+
+```{r}
+#mapply函数的应用：该函数的第一个参数为指定的函数，第二个参数为指定函数的参数。如果根据某种正则表达式将一个字符向量的对应特征取出来，例如取出'qaws1few4g'中的'1f'和'4g'
+#生成一组字符串向量
+char<-c('qwd121dad12d2edas','12123sd12asd12da2d12','qwe1ad123da','zdad1b')
+#采用gregexpr函数，使用的正则表达式为'[0-9][a-z]'
+parts<-gregexpr(pattern = '[0-9][a-z]',char)
+parts
+#自编函数，取出相应的字符串
+fun3<-function(text,len) substring(text,len,len+attr(len,'match.length')-1)
+#取出相应的字符串存放到res中
+res<-mapply(fun3,char,parts)
+res
+```
+
+最后总结一下：
+tapply()的被分析对象必须且只能是向量
+apply()的被分析对象必须且只能是矩阵或数组
+sapply()的被分析对象必须且只能是向量或列表
+lapply()的被分析对象必须且只能是向量或列表
+mapply()的被分析对象必须是函数
