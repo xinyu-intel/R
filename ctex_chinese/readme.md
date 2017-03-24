@@ -1,6 +1,6 @@
 Intro to the method of knitring PDF files including Chinese:
 
-## method1
+## method1--install a template
 
 1.you should install the latest ctex software on your machine, and be sure to choose the full installization package.
 
@@ -8,7 +8,7 @@ Intro to the method of knitring PDF files including Chinese:
 
 3.the file 'header.tex' should be copied to your working library.
 
-## method2
+## method2--create a script mannually
 
 1.you should install the latest ctex software on your machine, and be sure to choose the full installization package.
 
@@ -20,14 +20,16 @@ title: "标题"
 author: "你的名字"
 output:
   pdf_document:
-	includes:
-	  in_header: header.tex
-	keep_tex: yes   
-	latex_engine: xelatex
+    includes:
+      in_header: header.tex
+    keep_tex: yes
+    latex_engine: xelatex
   word_document: default
   html_document: default
 ---
 ```
+
+Pay attention to the **space** in this code, it should be typed in **ENG** mode!
 	
 3.the file 'header.tex' should be copied to your working library.
 
