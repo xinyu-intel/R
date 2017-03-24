@@ -1,0 +1,128 @@
+---
+title: "利用R语言进行数据重塑"
+output: github_document
+---
+
+##向数据框中添加新的列
+
+以数据集Loblolly为例,该数据集包含了各种树的高度和年龄，以下通过三种方式加以实现新增变量：
+
+###方法一：
+
+####使用一个$符
+
+```{r}
+head(Loblolly)
+data1<-Loblolly
+data1$logHeight<-log(data1$height)
+head(data1)
+```
+
+###方法二：
+
+####within函数（必须在新添加的变量中加上花括号）
+
+```{r}
+data2<-Loblolly
+data2<-within(data2,{logHeight=log(height)})
+head(data2)
+```
+
+####也可以使用with函数，该函数可以用于任何表达式的计算，但每次只能生成一个计算字段，最后还需要结合使用cbind函数
+
+```{r}
+data3<-Loblolly
+data3<-cbind(data3,with(data3,log(height)))
+names(data3)[4]<-'logHeight'
+head(data3)
+```
+
+###方法三：
+
+####transform函数
+
+```{r}
+data4<-Loblolly
+data4<-transform(data3,logHeight=log(height),powerage=age^2)
+head(data4)
+```
+
+##删除数据框中的某一列
+
+####建议使用subset函数，只需在删除的列前添加负号即可
+
+```{r}
+data5<-subset(data4,select = -c(logHeight,powerage))
+head(data5)
+```
+
+##更改数据框中所有数值变量的值
+
+####结合使用apply函数和sapply函数
+
+```{r}
+#例如，现在想对x1和x2的列进行转换，转换为原来值的平方再对数
+data6<-data.frame(x1=rnorm(1000),x2=rt(1000,2,3),
+                  x3=sample(c('a','b','c'),size=1000,replace = TRUE))
+data7<-cbind(data6,apply(data6[,-3],2,function(x) log(x^2)))
+names(data7)[c(4,5)]<-c('trans_x1','trans_x2')
+head(data7)
+
+data8<-cbind(data6,sapply(data6[-3],function(x) log(x^2)))
+names(data8)[c(4,5)]<-c('trans_x1','trans_x2')
+head(data8)
+```
+
+##变量的重编码
+
+即根据已有的变量重新编码，如连续变量的离散化
+
+```{r}
+#例如，现在想把data9中的x变量重编码，x<13则编码为1，x>=13且x<15则编码为2，剩余的编码为3
+data9<-data.frame(x=rpois(100,15))
+data9<-within(data9,{
+  recode_x=0
+  recode_x[x < 13] = 1
+  recode_x[x >= 13 & x < 15] = 2
+  recode_x[x >= 15] = 3
+})
+head(data9)
+```
+
+##数据框的合并
+
+普通情况下一般重用的有**rbind函数、cbind函数和merge函数**。这里重点介绍一下**plyr包中的join函数**，该函数在合并数据框时非常的方便，类似于数据库语言中的表连接。
+
+**语法：**
+
+```{r}
+# join(x, y, by = NULL, type = "left", match = "all")
+# 其中x和y是被要合并的数据框；
+# by为x和y中的连接字段；
+# type为合并类型，有左连、右连、内连和全连四种；
+# match用来数据合并过程中重复值的处理，默认情况下不排除重复值，当指定first时，则保留重复值中的第一个。
+```
+
+**例子：**
+
+```{r}
+#首先建立两个数据框
+df3<-data.frame(x=c('a','b','c','d','d'),y=1:5)
+df4<-data.frame(x=c('a','b','d','e'),z=c(6:9))
+df3;df4
+
+# 接下来看一看join函数是如何合并数据框的。
+# 左连和右连
+library(plyr)
+df5<-join(df3,df4,by='x',type='left')
+df6<-join(df3,df4,by='x',type='right')
+df5;df6
+
+#内连和全连
+library(plyr)
+df7<-join(df3,df4,by='x',type='inner')
+df8<-join(df3,df4,by='x',type='full')
+df7;df8
+```
+
+
