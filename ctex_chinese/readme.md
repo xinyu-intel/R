@@ -33,4 +33,4 @@ output:
 
 ## Attention
 
-The methods above can only work on windows machine, if you are using a MacBook or a Linux machine, you can modify header.tex to include Tex live packages, or you can first use a GitHub template to knitr a HTML page and then print it to PDF. It works well, too.
+The methods above can only work on a windows machine, if you are using a MacBook or a Linux machine, you can modify header.tex to include Tex live packages, or you can first use a GitHub template to knitr a HTML page and then print it to PDF. It works well, too.
