@@ -1,3 +1,5 @@
+
+
 # R语言学习笔记
 -----------------
 
@@ -20,6 +22,8 @@
 [概率论基础与R语言](https://github.com/xinyulab/R/blob/master/probability_git.md)
 
 [可视化与R语言](https://github.com/xinyulab/R/blob/master/visualization.md)
+
+[相关性分析及其可视化](https://github.com/xinyu-intel/R/blob/master/correlation.md)
 
 
 
